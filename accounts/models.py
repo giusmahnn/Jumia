@@ -23,14 +23,11 @@ class AccountManager(BaseUserManager):
         :return: The created user instance.
         """
         if not email:
-            raise ValueError('Users must have an email address')
-
-        user = self.model(
-            email=self.normalize_email(email),
-            **extra_fields
-        )
+            raise ValueError("Email must be provided")
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
         user.set_password(password)
-        user.save(using=self._db)
+        user.save()
         return user
 
     def create_superuser(self, email, password=None, **extra_fields):
@@ -65,9 +62,10 @@ class Account(AbstractUser):
     is_admin_user = models.BooleanField(default=False)
     is_seller_user = models.BooleanField(default=False)
     is_buyer_user = models.BooleanField(default=False)
+    is_email_verified = models.BooleanField(default=False)
 
 
-    objects = BaseUserManager()
+    objects = AccountManager()
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 
@@ -134,7 +132,7 @@ class Account(AbstractUser):
             role.append("Admin")
         if self.is_seller_user:
             role.append("Vendor")
-            return f"{self.first_name} {self.last_name} ({', '.join(role)})"
+        return f"{self.first_name} {self.last_name} ({', '.join(role)})"
 
 
 
