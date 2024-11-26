@@ -59,6 +59,8 @@ class Account(AbstractUser):
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     date_of_birth = models.DateField(null=True, blank=True)
     age = models.IntegerField(null=True, blank=True, default=0)
+    otp = models.IntegerField(null=True, blank=True)
+    otp_created_at = models.DateTimeField(null=True, blank=True)
 
     is_admin_user = models.BooleanField(default=False)
     is_seller_user = models.BooleanField(default=False)
