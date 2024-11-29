@@ -9,8 +9,8 @@ import re
 
 
 
-def generate_otp(length=6):
-    return ''.join(random.choice("0123456789", length))
+def generate_otp(*, k=6):
+    return ''.join(random.choices('0123456789', k=k))
 
 
 
@@ -48,7 +48,7 @@ def send_email(user_email, subject, template):
 
 
 
-def validate_otp(user_email, otp, ttl_minutes=10):
+def validate_otp(user_email, otp, ttl_minutes=5):
     try:
         user = Account.objects.filter(email=user_email).first()
     except Account.DoesNotExist:
@@ -69,13 +69,21 @@ def validate_otp(user_email, otp, ttl_minutes=10):
 
 def validate_password(value):
     if len(value) < 8:
-        raise ValidationError("Password must be at least 8 characters long")
-    if not re.search(r"[A-Z]", value):
-        raise ValidationError("Password must contain at least one uppercase letter")
-    if not re.search(r"[a-z]", value):
-        raise ValidationError("Password must contain at least one lowercase letter")
-    if not re.search(r"\d", value):
-        raise ValidationError("Password must contain at least one digit")
-    if not re.search(r"[^A-Za-z0-9]", value):
-        raise ValidationError("Password must contain at least one special character")
+        raise ValidationError(
+            "Password must be at least 8 characters long")
+    if not any(char.isdigit() for char in value):
+        raise ValidationError(
+            "Password must contain at least one digit")
+    if not any(char.isalpha() for char in value):
+        raise ValidationError(
+            "Password must contain at least one letter")
+    if not any(char.islower() for char in value):
+        raise ValidationError(
+            "Password must contain at least one lowercase letter")
+    if not any(char.isupper() for char in value):
+        raise ValidationError(
+            "Password must contain at least one uppercase letter")
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>]', value):
+        raise ValidationError(
+            "Password must contain at least one special character")
     return True

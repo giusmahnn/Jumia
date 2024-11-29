@@ -2,11 +2,10 @@ from datetime import timezone
 from django.db.models.signals import post_save
 from django.contrib.sites.shortcuts import get_current_site
 from django.dispatch import receiver
-from django.core.mail import send_mail
 from django.conf import settings
 from django.urls import reverse
 
-from .utils import generate_otp
+from .utils import *
 from .models import Account
 
 
@@ -23,7 +22,7 @@ def verify_email(sender, instance, created, **kwargs):
 
         # Send verification email
         try:
-            send_mail(
+            send_email(
                 "Verify Your Email",
                 f"Click the link to verify your email: {verification_url}",
                 "no-reply@myapp.com",

@@ -51,6 +51,7 @@ class Account(AbstractUser):
         upload_to="profile_images/", default="profile_images/default-profile-image.png", blank=True, null=True)
     first_name = models.CharField(max_length=20, blank=True, null=True)
     last_name = models.CharField(max_length=20, blank=True, null=True)
+    username = models.CharField(max_length=20, blank=True, null=True)
     email = models.EmailField(unique=True)
     gender = models.CharField(max_length=10, blank=True, null=True, choices=Gender.choices)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
@@ -58,6 +59,7 @@ class Account(AbstractUser):
     age = models.IntegerField(null=True, blank=True, default=0)
     otp = models.IntegerField(null=True, blank=True)
     otp_created_at = models.DateTimeField(null=True, blank=True)
+    password = models.CharField(max_length=20, blank=True, null=True)
 
     is_admin_user = models.BooleanField(default=False)
     is_seller_user = models.BooleanField(default=False)

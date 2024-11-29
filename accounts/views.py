@@ -1,12 +1,13 @@
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 import requests
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.template.loader import render_to_string
 from rest_framework import status
+from .utils import *
 
-from . utils import *
+from .utils import *
 from .serializers import *
 from .models import *
 from .permissions import *
@@ -112,3 +113,156 @@ class VerifyEmail(APIView):
             return Response({"message": "Email verified successfully."}, status=status.HTTP_200_OK)
         except Account.DoesNotExist:
             return Response({"Error":"Invalid or expired token."}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+
+class CreateAccount(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        serializers = AccountSerializer(data=request.data)
+        url = "http://127.0.0.1:8000"
+        data = {}
+        if serializers.is_valid(raise_exception=False):
+            user = serializers.save(is_buyer_user=True)
+            user.save()
+
+            context = {
+                "name": user.first_name,
+                "verify_link": f"{url}/account/user?{user.otp}/",
+                "subject": "Verify your Jumia account",
+                "body": f"Hello {user.first_name},\n\nTo verify your Jumia account, please click on the link below:\n{url}/verify-email?otp={user.otp}\n\nThank you!"
+            }
+            template = render_to_string("accounts/verify-email.html", context)
+            send_email(user.email, "Something here", template)
+
+            data["message"] = "Account created successfully."
+            data["user_details"] = AccountSerializer(user).data
+            data["tokens"] = jwt_auth(user)
+
+            return Response(data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
+
+class AccountLogin(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        data = {}
+        if serializer.is_valid(raise_exception=False):
+            email = serializer.validated_data.get("email")
+            password = serializer.validated_data.get("password")
+
+            if email:
+                try:
+                    user = Account.objects.get(email=email)
+                except Account.DoesNotExist:
+                    return Response({"error": "User not found with this email."}, status=status.HTTP_404_NOT_FOUND)
+            
+            if password != user.password:
+                return Response({"error": "Incorrect password."}, status=status.HTTP_401_UNAUTHORIZED)
+            
+             
+            
+            data["response"] = "User logged in successfully"
+            data["user_info"] = AccountSerializer(user).data
+            data["Token"] = jwt_auth(user)
+            return Response(data, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
+class ResetLinkView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        
+        if request.user.is_authenticated:
+            user = request.user
+            email = user.email
+
+        else:
+            email = request.data.get('email')
+            if not email:
+                return Response({"Error": "Email is required"}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                user = Account.objects.get(email=email)
+            except Account.DoesNotExist:
+                return Response({"Error": "User does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user.otp = generate_otp()
+        link = "https://adfd-2c0f-f5c0-600-1b0-19d4-83d0-a763-e1cc.ngrok-free.app"
+        reset_link = f"{link}/reset-password/?&otp={user.otp}"
+        
+
+        context = {
+            "name": user.first_name or 'user',
+            "reset_link": reset_link,
+        }
+        template = render_to_string("accounts/reset-password.html", context)
+        send_email(email, "Reset your Jumia password", template)
+        return Response({"message": "Reset link sent successfully."}, status=status.HTTP_200_OK)
+
+
+class ResetPasswordView(APIView):
+    def post(self, request):
+        serializers = ResetPasswordSerializer
+        if serializers.is_valid():
+            data = serializers.validated_data
+
+            try:
+                user = Account.objects.get(otp=data["otp"])
+            except Account.DoesNotExist:
+                return Response({"error": "Invalid or expired token."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            user.set_password(data["password"])
+            user.save()
+            return Response({"message": "Password reset successfully."}, status=status.HTTP_200_OK)
+        
+        return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
+
+class ProfileView(APIView):
+    def get(self, request):
+        user = request.user
+        serializer = ProfileSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request):
+        user = request.user
+        serializer = ProfileSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+
+
+class AccountDelete(APIView):
+    permission_classes = [IsAuthenticated]
+    def delete(self, request):
+        user = request.user
+        confirm = request.data.get("confirm")
+        if not confirm or confirm.lower() != "yes":
+            return Response({"error": "Please confirm deletion."}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user.delete()
+            return Response({"message": "Account deleted successfully."}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        try:
+            refresh_token = request.data["refresh"]
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response({"message": "Logged out successfully."}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
