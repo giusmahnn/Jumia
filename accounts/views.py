@@ -18,7 +18,7 @@ from .permissions import *
 
 class GoogleAuthRedirect(APIView):
     def get(self, request):
-        redirect_url = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY}&response_type=code&scope=https://www.googleapis.com/auth/userinfo.profile%20https://www.googleapis.com/auth/userinfo.email&access_type=offline&redirect_uri=https://adfd-2c0f-f5c0-600-1b0-19d4-83d0-a763-e1cc.ngrok-free.app/google/callback"
+        redirect_url = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY}&response_type=code&scope=https://www.googleapis.com/auth/userinfo.profile%20https://www.googleapis.com/auth/userinfo.email&access_type=offline&redirect_uri=https://50a4-2c0f-f5c0-601-9952-d1d2-c60f-9c8f-b617.ngrok-free.app/google/callback"
         return redirect(redirect_url)
 
 
@@ -35,7 +35,7 @@ class GoogleRedirect(APIView):
             "code": code,
             "client_id": settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
             "client_secret": settings.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET,
-            "redirect_uri": "https://adfd-2c0f-f5c0-600-1b0-19d4-83d0-a763-e1cc.ngrok-free.app/google/callback",
+            "redirect_uri": "https://50a4-2c0f-f5c0-601-9952-d1d2-c60f-9c8f-b617.ngrok-free.app/google/callback",
             "grant_type": "authorization_code",
         }
 
@@ -99,20 +99,18 @@ class GoogleRedirect(APIView):
         return Response(data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
 
 class VerifyEmail(APIView):
-    def get(self, request):
-        otp = request.query_params.get("otp")
-
-        if not otp:
-            return Response({"message": "Missing OTP"}, status.HTTP_400_BAD_REQUEST)
-        
+    def post(self, request):
+        otp = request.data.get('otp')
+        user = request.user
         try:
-            user = Account.objects.filter(otp=otp).first()
-            user.is_active = True
-            user.verification_token = None  # Clear the token after verification
-            user.save()
-            return Response({"message": "Email verified successfully."}, status=status.HTTP_200_OK)
+            user_token = Account.objects.get(otp=otp, user=user)
         except Account.DoesNotExist:
-            return Response({"Error":"Invalid or expired token."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "Invalid Token"}, status.HTTP_400_BAD_REQUEST)
+        if user_token.user == user:
+            user.is_email_verified = True
+            user.save()
+            user_token.delete()
+            return Response({"Message": "Account Verrified"}, status.HTTP_200_OK)
         
 
 
@@ -128,9 +126,9 @@ class CreateAccount(APIView):
 
             context = {
                 "name": user.first_name,
-                "verify_link": f"{url}/account/user?{user.otp}/",
+                "verify_link": f"{url}/verify-email/?otp={user.otp}/",
                 "subject": "Verify your Jumia account",
-                "body": f"Hello {user.first_name},\n\nTo verify your Jumia account, please click on the link below:\n{url}/verify-email?otp={user.otp}\n\nThank you!"
+                "body": f"Hello {user.first_name},\n\nTo verify your Jumia account, please click on the link below:\n{url}/verify-email/?otp={user.otp}\n\nThank you!"
             }
             template = render_to_string("accounts/verify-email.html", context)
             send_email(user.email, "Something here", template)

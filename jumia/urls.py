@@ -26,7 +26,7 @@ urlpatterns = [
     # path("orders/", include("orders.urls")),
     # path("cart/", include("cart.urls")),
     # path("search/", include("search.urls")),
-    path("vendor/", include("vendor.urls")),
+    path("", include("vendor.urls")),
     path("auth/", include('drf_social_oauth2.urls', namespace='drf')),
 ]
 
