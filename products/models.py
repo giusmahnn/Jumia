@@ -1,23 +1,9 @@
 # File: products/models.py
 
 from django.db import models
+from .choices import *
 
 from accounts.models import Vendor
-
-class Category(models.Model):
-    """
-    Represents a product category.
-    """
-    name = models.CharField(max_length=255, unique=True)
-    slug = models.SlugField(max_length=255, unique=True)
-    parent = models.ForeignKey(
-        'self', on_delete=models.SET_NULL, null=True, blank=True, related_name="subcategories"
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return self.name
 
 
 class Product(models.Model):
@@ -27,7 +13,7 @@ class Product(models.Model):
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name="products")
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="products")
+    category = models.CharField(max_length=30, null=True, blank=True, choices=Category.choices)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     discount_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)

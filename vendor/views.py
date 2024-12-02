@@ -3,6 +3,8 @@ from rest_framework.response import Response
 from django.template.loader import render_to_string
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
+
+from accounts.permissions import IsAdmin
 from .serializers import *
 from accounts.utils import *
 from accounts.models import *
@@ -68,3 +70,38 @@ class VendorLoginView(APIView):
     
 
 
+class CreateProduct(APIView):
+    permission_classes = [IsAdmin, IsAuthenticated]
+    def get(self, request):
+        data = {}
+        try:
+            product = Product.objects.filter(vendor=self.request.user.vendor)
+            data["Products"] = VendorProductSerializer(product, many=True).data
+        except Product.DoesNotExist:
+            return Response({"message": "No Products"}, status.HTTP_400_BAD_REQUEST)
+        return Response(data, status.HTTP_200_OK)
+    
+    def post(self, request):
+        serializers = VendorProductSerializer(data=request.data)
+        data = {}
+        if serializers.is_valid():
+            product = serializers.save(vendor=request.user.vendor)
+            data["Product"] = VendorProductSerializer(product).data
+            return Response(data, status=status.HTTP_201_CREATED)
+        return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
+
+class VendorDashboardView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+    def get(self, request):
+        vendor = request.user.vendor
+
+        total_products = vendor.products.count()
+
+        data_dashboard = {
+            "Total Products": total_products
+        }
+
+        return Response(data_dashboard, status=status.HTTP_200_OK)

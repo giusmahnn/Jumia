@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from accounts.serializers import AccountSerializer
 from accounts.models import *
+from products.models import Product
 
 
 
@@ -57,3 +58,34 @@ class VendorLoginSerializer(serializers.Serializer):
             data["user"] = user
 
         return data
+    
+
+class VendorProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = [
+            'id',
+            'vendor',
+            'name',
+            'slug',
+            'category',
+            'description',
+            'price',
+            'discount_price',
+            'stock',
+            'image',
+            'created_at',
+            'updated_at',
+        ]
+        extra_kwargs = {
+            "created_at": {"read_only": True},
+            "updated_at": {"read_only": True},
+            "id": {"read_only": True},
+            "vendor": {"read_only": True},
+        }
+
+
+        def create(self, validated_data):
+            vendor = self.context['request'].user.vendor
+            product = Product.objects.create(vendor=vendor, **validated_data)
+            return product
