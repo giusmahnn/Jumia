@@ -3,7 +3,7 @@
 from django.db import models
 from .choices import *
 
-from accounts.models import Vendor
+from vendor.models import Vendor
 
 
 class Product(models.Model):

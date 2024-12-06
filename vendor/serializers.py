@@ -2,6 +2,7 @@ from rest_framework import serializers
 from accounts.serializers import AccountSerializer
 from accounts.models import *
 from products.models import Product
+from vendor.models import Vendor
 
 
 

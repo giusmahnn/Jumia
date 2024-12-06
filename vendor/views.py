@@ -105,3 +105,11 @@ class VendorDashboardView(APIView):
         }
 
         return Response(data_dashboard, status=status.HTTP_200_OK)
+
+
+
+class Delete(APIView):
+    permission_classes = [AllowAny]
+    def delete(self, request):
+        products = Product.objects.all().delete()
+        return Response({"message": "All products deleted successfully."})
