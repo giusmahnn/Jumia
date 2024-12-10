@@ -12,4 +12,5 @@ class Status(models.TextChoices):
     RETURN_REQUESTED = "Return Requested", _("Return Requested")
     RETURN_ACCEPTED = "Return Accepted", _("Return Accepted")
     RETURN_REJECTED = "Return Rejected", _("Return Rejected")
+    PAYMENT_RECEIVED = "Payment Received", _("Payment Received")
     
