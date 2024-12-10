@@ -26,9 +26,6 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
-    def __str__(self):
-        return self.name
-
     @property
     def is_on_sale(self):
         return self.discount_price is not None
