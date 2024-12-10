@@ -67,7 +67,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
-    'orders.middleware.MergeCartSessionMiddleware'
+    # 'orders.middleware.MergeCartSessionMiddleware'
 ]
 
 ROOT_URLCONF = 'jumia.urls'

@@ -9,7 +9,7 @@ class Order(models.Model):
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name="vendor_orders")  
     customer = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="customer_orders")  
     # product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="product_orders")  
-    quantity = models.PositiveIntegerField()  
+    # quantity = models.PositiveIntegerField()  
     status = models.CharField(max_length=20, choices=Status.choices, default='pending')  
     order_date = models.DateTimeField(auto_now_add=True)
 

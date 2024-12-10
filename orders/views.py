@@ -32,33 +32,39 @@ class CartView(APIView):
 
 
 class CartItemView(APIView):
+    permission_classes = [AllowAny]
     def post(self, request):
-        product_id = request.data.get("product")
+        product_id = request.data.get('product')
         quantity = request.data.get('quantity', 1)
 
-        # if user is authenticated
         if request.user.is_authenticated:
+            # Handle authenticated user's cart
             cart, created = Cart.objects.get_or_create(user=request.user)
             product = get_object_or_404(Product, id=product_id)
-            cart_item, created = CartItem.objects.get_or_create(cart=cart,
-                                                                product=product,
-                                                                default={"quantity": quantity}
-                                                                )
+            cart_item, created = CartItem.objects.get_or_create(
+                cart=cart, product=product, defaults={'quantity': quantity}
+            )
             if not created:
                 cart_item.quantity += quantity
                 cart_item.save()
         else:
-            # For annonymous users
-            session_cart, created = request.session.get('cart', {})
-            session_cart[product_id] = session_cart.get(product_id) + quantity
-            request.session["cart"] = session_cart
+            # Handle anonymous user's cart
+            session_cart = request.session.get('cart', {})
+            session_cart[product_id] = session_cart.get(product_id, 0) + quantity
+            request.session['cart'] = session_cart
             request.session.modified = True
-        return Response({"Message": "Item added to cart"}, status.HTTP_201_CREATED)
-    
+
+        return Response({"message": "Item added to cart"}, status=status.HTTP_201_CREATED)
+
+
+
+
+class CartItemDeleteView(APIView):
+    permission_classes = [AllowAny]
     def delete(self, request, pk):
-        if request.user.is_autenticated:
+        if request.user.is_authenticated:
             cart = get_object_or_404(Cart, user=request.user)
-            cart_item = get_object_or_404(CartItem, id=pk, cart=cart)
+            cart_item = get_object_or_404(CartItem, pk=pk, cart=cart)
             cart_item.delete()
 
         else:
@@ -74,24 +80,33 @@ class CartItemView(APIView):
 class CheckoutView(APIView):
     def post(self, request):
         if request.user.is_authenticated:
-            cart = get_object_or_404(cart, user=request.user)
+            cart = get_object_or_404(Cart, user=request.user)
             if not cart.cart_items.exists():
-                return Response({"Message": "Cart is empty"}, status=status.HTTP_400_BAD_REQUEST)
-            
-            order = Order.objects.create(customer=request.user,
-                                        vendor=cart.cart_items.first().product.vendor,
-                                        status='Pending'
-                                        )
-            for cart_item in cart.cart_items.all():
-                OrderItem.objects.create(order=order,
-                                        product=cart_item.product,
-                                        quantity=cart_item.quantity
-                                        )
-                cart.cart_items.all().delete()
+                return Response({"error": "Cart is empty"}, status=status.HTTP_400_BAD_REQUEST)
 
-                serializer = ShippingAddressSerializer(data=request.data)
-                if serializer.is_valid():
-                    serializer.save(order=order, customer=request.user)
-                    return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
+            # Create the order
+            order = Order.objects.create(
+                customer=request.user,
+                vendor=cart.cart_items.first().product.vendor,
+                status='pending'
+            )
+
+            # Create order items
+            for item in cart.cart_items.all():
+                OrderItem.objects.create(
+                    order=order,
+                    product=item.product,
+                    quantity=item.quantity,
+                    price=item.product.price
+                )
+
+            # Clear the cart after checkout
+            cart.cart_items.all().delete()
+            serializers  = ShippingAddressSerializer(data=request.data)
+            if serializers.is_valid():
+                serializers.save(order=order,customer=request.user)
+                return Response({"message": "Checkout successful"}, status=status.HTTP_200_OK)
+
+            return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
         else:
-            return Response({"Message": "Login is required to checkout the order"}, status.HTTP_401_UNAUTHORIZED)
+            return Response({"error": "Login required for checkout"}, status=status.HTTP_401_UNAUTHORIZED)
