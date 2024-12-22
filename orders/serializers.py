@@ -29,7 +29,7 @@ class CartSerializer(serializers.ModelSerializer):
         fields = [
                 'id', 
                 'user', 
-                'cart_items', 
+                'cart_items',
                 'total_price'
             ]
 
@@ -44,19 +44,24 @@ class ShippingAddressSerializer(serializers.ModelSerializer):
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
+    total_price = serializers.SerializerMethodField()
     class Meta:
         model = OrderItem
-        fields = [
-            'id', 
+        fields = [ 
             'product', 
             'quantity', 
-            'price'
+            'price',
+            'total_price'
         ]
+    def get_total_price(self, obj):
+        return obj.get_total_price()
+    
 
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     shipping_address = ShippingAddressSerializer()
+    total_price = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
@@ -66,6 +71,10 @@ class OrderSerializer(serializers.ModelSerializer):
             'customer', 
             'items', 
             'status', 
-            'order_date', 
+            'order_date',
+            'total_price',
             'shipping_address'
         ]
+
+    def get_total_price(self, obj):
+        return obj.calculate_total_price()

@@ -203,3 +203,7 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
     'https://www.googleapis.com/auth/userinfo.profile'
     # Add any additional scopes you want to request here
 ]
+
+# Paystack credentials
+TEST_SECRET_KEY = os.getenv('TEST_SECRET_KEY')
+TEST_PUBLIC_KEY = os.getenv('TEST_PUBLIC_KEY')

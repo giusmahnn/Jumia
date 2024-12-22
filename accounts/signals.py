@@ -8,7 +8,7 @@ from django.urls import reverse
 from .utils import *
 from .models import Account
 
-
+@receiver(post_save, sender=Account)
 def verify_email(sender, instance, created, **kwargs):
     if created and not instance.is_email_verified:
         # Generate and save the OTP
