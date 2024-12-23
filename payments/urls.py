@@ -4,5 +4,6 @@ from.views import *
 
 
 urlpatterns = [
-    path("paystack/callback/", InitiatePaymentView.as_view())
+    path("paystack/callback/", PaystackCallbackView.as_view(), name="paystack-callback"),
+    path("paystack/initiate/", InitiatePaymentView.as_view(), name="paystack-initiate"),
 ]
