@@ -45,16 +45,19 @@ class ShippingAddressSerializer(serializers.ModelSerializer):
 
 class OrderItemSerializer(serializers.ModelSerializer):
     total_price = serializers.SerializerMethodField()
+    product = serializers.SerializerMethodField()
     class Meta:
         model = OrderItem
         fields = [ 
-            'product', 
+            'product',
             'quantity', 
             'price',
             'total_price'
         ]
     def get_total_price(self, obj):
         return obj.get_total_price()
+    def get_product(self, obj):
+        return obj.product.name
     
 
 

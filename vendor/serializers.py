@@ -87,6 +87,18 @@ class VendorProductSerializer(serializers.ModelSerializer):
 
 
         def create(self, validated_data):
+            """
+            Creates a new product for the authenticated vendor.
+
+            Parameters:
+            validated_data (dict): A dictionary containing the validated data for the product.
+
+            Returns:
+            Product: The newly created product instance.
+
+            The function retrieves the authenticated vendor from the request context,
+            creates a new product using the provided validated data, and returns the created product instance.
+            """
             vendor = self.context['request'].user.vendor
             product = Product.objects.create(vendor=vendor, **validated_data)
             return product

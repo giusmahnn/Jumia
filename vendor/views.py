@@ -9,6 +9,7 @@ from .serializers import *
 from accounts.utils import *
 from accounts.models import *
 from rest_framework.views import APIView
+from django.db.models import Sum, Avg
 # Create your views here.
 
 
@@ -92,16 +93,23 @@ class CreateProduct(APIView):
     
 
 
-
 class VendorDashboardView(APIView):
     permission_classes = [IsAuthenticated, IsAdmin]
     def get(self, request):
         vendor = request.user.vendor
 
         total_products = vendor.products.count()
+        total_sales = vendor.orders.filter(status='Completed').count()
+        total_orders = vendor.orders.count()
+        total_revenue = vendor.orders.filter(status='Completed').aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+        average_rating = vendor.reviews.aggregate(Avg('rating'))['rating__avg'] or 0
 
         data_dashboard = {
-            "Total Products": total_products
+            "Total Products": total_products,
+            "Total Sales": total_sales,
+            "Total Orders": total_orders,
+            "Total Revenue": total_revenue,
+            "Average Rating": average_rating
         }
 
         return Response(data_dashboard, status=status.HTTP_200_OK)

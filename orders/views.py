@@ -78,42 +78,6 @@ class CartItemDeleteView(APIView):
 
 
 
-# class CheckoutView(APIView):
-#     def post(self, request):
-#         if request.user.is_authenticated:
-#             cart = get_object_or_404(Cart, user=request.user)
-#             if not cart.cart_items.exists():
-#                 return Response({"error": "Cart is empty"}, status=status.HTTP_400_BAD_REQUEST)
-
-#             # Create the order
-#             order = Order.objects.create(
-#                 customer=request.user,
-#                 vendor=cart.cart_items.first().product.vendor,  # correct this line
-#                 status='pending'
-#             )
-
-#             # Create order items
-#             for item in cart.cart_items.all():
-#                 OrderItem.objects.create(
-#                     order=order,
-#                     product=item.product,
-#                     quantity=item.quantity,
-#                 )
-
-#             # Clear the cart after checkout
-#             cart.cart_items.all().delete()
-#             serializers  = ShippingAddressSerializer(data=request.data)
-#             if serializers.is_valid():
-#                 serializers.save(order=order,customer=request.user)
-#                 return Response({"message": "Checkout successful"}, status=status.HTTP_200_OK)
-
-#             return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
-#         else:
-#             return Response({"error": "Login required for checkout"}, status=status.HTTP_401_UNAUTHORIZED)
-
-
-
-
 
 class CheckoutView(APIView):
     @transaction.non_atomic_requests
@@ -140,12 +104,20 @@ class CheckoutView(APIView):
             # create Order
             print("This order quantity")
             for item in cart.cart_items.all():
+                product = item.product
                 order_items = OrderItem.objects.create(
                     product=item.product,
                     quantity=item.quantity,
                     price=item.product.price
                 )
                 order.items.add(order_items)
+
+                product.quantity -= item.quantity
+                product.save()
+
+            # cart.cart_items.all().delete()
+            # order.save()
+
 
             return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
         else:
