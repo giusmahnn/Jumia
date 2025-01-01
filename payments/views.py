@@ -1,6 +1,7 @@
 import json
 from django.conf import settings
 from django.shortcuts import get_object_or_404
+from rest_framework.permissions import AllowAny
 import requests
 from rest_framework.response import Response
 from rest_framework import status
@@ -96,7 +97,7 @@ class InitiatePaymentView(APIView):
             "email": request.user.email,
             "amount": int(amount * 100),  
             "reference": payment.reference,
-            "callback_url": request.build_absolute_uri('/paystack/callback/'),
+            "callback_url": request.build_absolute_uri('/paystack/webhook/'),
         }
 
         print(f"Sending request to Paystack with data: {data}")
@@ -120,29 +121,52 @@ class InitiatePaymentView(APIView):
 
 
 
-class PaystackCallbackView(APIView):
-    def get(self, request):
-        reference = request.query_params.get('reference')
-        payment = get_object_or_404(Payment, reference=reference)
+# class PaystackCallbackView(APIView):
+#     def get(self, request):
+#         reference = request.query_params.get('reference')
+#         payment = get_object_or_404(Payment, reference=reference)
 
-        headers = {
-            'Authorization': f'Bearer {settings.TEST_SECRET_KEY}',
-        }
+#         headers = {
+#             'Authorization': f'Bearer {settings.TEST_SECRET_KEY}',
+#         }
 
-        response = requests.get(
-            f'https://api.paystack.co/transaction/verify/{reference}',
-            headers=headers
-        )
+#         response = requests.get(
+#             f'https://api.paystack.co/transaction/verify/{reference}',
+#             headers=headers
+#         )
 
-        if response.status_code == 200:
-            response_data = response.json()
-            if response_data['data']['status'] == 'success':
-                payment.status = Status.SUCCESSFUL
-                payment.save()
-                return Response({"message": "Payment successful"}, status=status.HTTP_200_OK)
-            else:
-                payment.status = Status.FAILED
-                payment.save()
-                return Response({"message": "Payment failed"}, status=status.HTTP_400_BAD_REQUEST)
+#         if response.status_code == 200:
+#             response_data = response.json()
+#             if response_data['data']['status'] == 'success':
+#                 payment.status = Status.SUCCESSFUL
+#                 payment.save()
+#                 return Response({"message": "Payment successful"}, status=status.HTTP_200_OK)
+#             else:
+#                 payment.status = Status.FAILED
+#                 payment.save()
+#                 return Response({"message": "Payment failed"}, status=status.HTTP_400_BAD_REQUEST)
+#         else:
+#             return Response({"error": "Failed to verify payment with Paystack."}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+class PaystackWebhookView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        data = request.data
+        event = data.get('event')
+        if event == 'charge.success':
+            reference = data.get('data').get('reference')
+            payment = get_object_or_404(Payment, reference=reference)
+            payment.status = Status.SUCCESSFUL
+            payment.save()
+            return Response({"message": "Payment successful"}, status=status.HTTP_200_OK)
+        elif event == 'charge.failed':
+            reference = data.get('data').get('reference')
+            payment = get_object_or_404(Payment, reference=reference)
+            payment.status = Status.FAILED
+            payment.save()
+            return Response({"message": "Payment failed"}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({"error": "Failed to verify payment with Paystack."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Invalid event type"}, status=status.HTTP_400_BAD_REQUEST)
