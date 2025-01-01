@@ -99,17 +99,17 @@ class VendorDashboardView(APIView):
         vendor = request.user.vendor
 
         total_products = vendor.products.count()
-        total_sales = vendor.orders.filter(status='Completed').count()
-        total_orders = vendor.orders.count()
-        total_revenue = vendor.orders.filter(status='Completed').aggregate(Sum('total_amount'))['total_amount__sum'] or 0
-        average_rating = vendor.reviews.aggregate(Avg('rating'))['rating__avg'] or 0
+        total_sales = vendor.vendor_orders.filter(status='Completed').count()
+        total_orders = vendor.vendor_orders.count()
+        total_revenue = vendor.vendor_orders.filter(status='Completed').aggregate(Sum('price'))['price__sum'] or 0
+        # average_rating = vendor.reviews.aggregate(Avg('rating'))['rating__avg'] or 0
 
         data_dashboard = {
             "Total Products": total_products,
             "Total Sales": total_sales,
             "Total Orders": total_orders,
-            "Total Revenue": total_revenue,
-            "Average Rating": average_rating
+            "Total Revenue": total_revenue
+            # "Average Rating": average_rating
         }
 
         return Response(data_dashboard, status=status.HTTP_200_OK)
