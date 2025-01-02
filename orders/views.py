@@ -115,7 +115,7 @@ class CheckoutView(APIView):
                 product.quantity -= item.quantity
                 product.save()
 
-            # cart.cart_items.all().delete()
+            cart.cart_items.all().delete()
             # order.save()
 
 
