@@ -1,4 +1,3 @@
-```markdown
 # Jumia Clone
 
 ## Description
@@ -7,22 +6,23 @@ This project is a clone of the Jumia e-commerce platform, built using Django and
 
 ## Table of Contents
 
-- [Description](#description)
-- [Table of Contents](#table-of-contents)
-- [Installation](#installation)
-  - [Prerequisites](#prerequisites)
-  - [Steps](#steps)
-- [Usage](#usage)
-  - [Access the Admin Panel](#access-the-admin-panel)
-  - [API Endpoints](#api-endpoints)
-- [Features](#features)
-- [Contributing](#contributing)
-- [Contact Info](#contact-info)
-- [FAQ](#faq)
-  - [How do I set up the project locally?](#how-do-i-set-up-the-project-locally)
-  - [How do I contribute to the project?](#how-do-i-contribute-to-the-project)
-  - [What technologies are used in this project?](#what-technologies-are-used-in-this-project)
-  - [How can I report an issue or request a feature?](#how-can-i-report-an-issue-or-request-a-feature)
+- [Jumia Clone](#jumia-clone)
+  - [Description](#description)
+  - [Table of Contents](#table-of-contents)
+  - [Installation](#installation)
+    - [Prerequisites](#prerequisites)
+    - [Steps](#steps)
+  - [Usage](#usage)
+    - [Access the Admin Panel](#access-the-admin-panel)
+    - [API Endpoints](#api-endpoints)
+  - [Features](#features)
+  - [Contributing](#contributing)
+  - [Contact Info](#contact-info)
+  - [FAQ](#faq)
+    - [How do I set up the project locally?](#how-do-i-set-up-the-project-locally)
+    - [How do I contribute to the project?](#how-do-i-contribute-to-the-project)
+    - [What technologies are used in this project?](#what-technologies-are-used-in-this-project)
+    - [How can I report an issue or request a feature?](#how-can-i-report-an-issue-or-request-a-feature)
 
 ---
 
@@ -40,7 +40,7 @@ This project is a clone of the Jumia e-commerce platform, built using Django and
 1. Clone the repository:
 
    ```sh
-   git clone https://github.com/yourusername/jumia-clone.git
+   git clone https://github.com/giusmahnn/Jumia.git
    cd jumia-clone
    ```
 
