@@ -45,3 +45,13 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
 # Paystack credentials
 TEST_SECRET_KEY = os.getenv('TEST_SECRET_KEY')
 TEST_PUBLIC_KEY = os.getenv('TEST_PUBLIC_KEY')
+
+# Session settings
+SESSION_COOKIE_SETTINGS = {
+    'SECURE': True,  # Ensure the session cookie is only sent over HTTPS
+    'HTTPONLY': True,  # Prevent JavaScript from accessing the session cookie
+    'SAMESITE': 'Lax',  # Prevent the session cookie from being sent with cross-site requests
+}
+
+
+# Caching settings
