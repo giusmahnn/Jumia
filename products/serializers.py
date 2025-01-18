@@ -5,13 +5,13 @@ from .models import *
 class ProductSerializer(serializers.ModelSerializer):
     # on_sale = serializers.SerializerMethodField()
     # discount_percentage = serializers.SerializerMethodField()
+    store_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = [
             'id',
-            'vendor_id',
-            'vendor',
+            'store_name',
             'name',
             'slug',
             'category',
@@ -20,7 +20,7 @@ class ProductSerializer(serializers.ModelSerializer):
             # 'discount_price',
             # 'discount_percentage',
             # 'on_sale',
-            'stock',
+            'quantity',
             'image',
             'created_at',
             'updated_at',
@@ -35,6 +35,9 @@ class ProductSerializer(serializers.ModelSerializer):
             'slug': {'read_only': True},
 
         }
+    
+    def get_store_name(slef, obj):
+        return obj.vendor.store_name
 
     # def is_on_sale(self, obj):
     #     return obj.is_on_sale

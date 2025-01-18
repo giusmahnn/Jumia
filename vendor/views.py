@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from rest_framework.response import Response
 from django.template.loader import render_to_string
 from rest_framework import status
@@ -9,6 +8,7 @@ from .serializers import *
 from accounts.utils import *
 from accounts.models import *
 from rest_framework.views import APIView
+from products.pagination import CustomPagination
 from django.db.models import Sum, Avg
 # Create your views here.
 
@@ -76,11 +76,14 @@ class CreateProduct(APIView):
     def get(self, request):
         data = {}
         try:
+            # Fetch all products created by the authenticated vendor
             product = Product.objects.filter(vendor=self.request.user.vendor)
-            data["Products"] = VendorProductSerializer(product, many=True).data
+            paginator = CustomPagination()
+            paginate_products = paginator.paginate_queryset(product, request)
+            data["Products"] = VendorProductSerializer(paginate_products, many=True).data
         except Product.DoesNotExist:
-            return Response({"message": "No Products"}, status.HTTP_400_BAD_REQUEST)
-        return Response(data, status.HTTP_200_OK)
+            return Response({"message": "No Products"}, status=status.HTTP_404_NOT_FOUND)
+        return paginator.get_paginated_response(data)
     
     def post(self, request):
         serializers = VendorProductSerializer(data=request.data)

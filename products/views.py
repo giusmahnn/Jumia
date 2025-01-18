@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from products.models import Product
 from products.serializers import ProductSerializer
+from products.pagination import CustomPagination
 from django.db.models import Q
 
 # Create your views here.
@@ -16,8 +17,11 @@ class ProductView(APIView):
     permission_classes = [AllowAny]
     def get(self, request):
         products = Product.objects.all()
-        serializer = ProductSerializer(products, many=True)
-        return Response(serializer.data, status.HTTP_200_OK)
+        paginator = CustomPagination()
+        paginated_products = paginator.paginate_queryset(products, request)
+        serializer = ProductSerializer(paginated_products, many=True)
+        return paginator.get_paginated_response(serializer.data)
+        # return Response(serializer.data, status.HTTP_200_OK)
 
 
 
@@ -37,10 +41,13 @@ class ProductSearchView(APIView):
             if category:
                 query &= Q(category__icontains=category)
             queryset = queryset.filter(query)
-        serializer = ProductSerializer(queryset, many=True)
+        paginator = CustomPagination()
+        paginated_products = paginator.paginate_queryset(queryset, request)
+        serializer = ProductSerializer(paginated_products, many=True)
+
         if not queryset.exists():
             return Response({"message": "No products found"}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializer.data, status.HTTP_200_OK)
+        return paginator.get_paginated_response(serializer.data)
     
     
 

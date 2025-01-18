@@ -73,7 +73,7 @@ class VendorProductSerializer(serializers.ModelSerializer):
             'description',
             'price',
             'discount_price',
-            'stock',
+            'quantity',
             'image',
             'created_at',
             'updated_at',
