@@ -99,18 +99,17 @@ class GoogleRedirect(APIView):
         return Response(data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
 
 class VerifyEmail(APIView):
-    def post(self, request):
-        otp = request.data.get('otp')
-        user = request.user
+    def get(self, request):
+        otp = request.GET.get("otp")
+        if not otp:
+            return Response({"message": "OTP is required"}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            user_token = Account.objects.get(otp=otp, user=user)
-        except Account.DoesNotExist:
-            return Response({"message": "Invalid Token"}, status.HTTP_400_BAD_REQUEST)
-        if user_token.user == user:
+            user = Account.objects.get(otp=otp)
             user.is_email_verified = True
             user.save()
-            user_token.delete()
-            return Response({"Message": "Account Verrified"}, status.HTTP_200_OK)
+            return Response({"Message": "Account Verified"}, status=status.HTTP_200_OK)
+        except Account.DoesNotExist:
+            return Response({"message": "Invalid Token"}, status=status.HTTP_400_BAD_REQUEST)
         
 
 
@@ -118,7 +117,6 @@ class CreateAccount(APIView):
     permission_classes = [AllowAny]
     def post(self, request):
         serializers = AccountSerializer(data=request.data)
-        url = "http://127.0.0.1:8000"
         data = {}
         if serializers.is_valid(raise_exception=False):
             user = serializers.save(is_buyer_user=True)
@@ -126,12 +124,12 @@ class CreateAccount(APIView):
 
             context = {
                 "name": user.first_name,
-                "verify_link": f"{url}/verify-email/?otp={user.otp}/",
+                "verify_link": f"{settings.BASE_URL}/verify-email/?otp={user.otp}/",
                 "subject": "Verify your Jumia account",
-                "body": f"Hello {user.first_name},\n\nTo verify your Jumia account, please click on the link below:\n{url}/verify-email/?otp={user.otp}\n\nThank you!"
+                "body": f"Hello {user.first_name},\n\nTo verify your Jumia account, please click on the link below:\n{settings.BASE_URL}/verify-email/?otp={user.otp}\n\nThank you!"
             }
             template = render_to_string("accounts/verify-email.html", context)
-            send_email(user.email, "Something here", template)
+            send_email(user.email, "Verify your Jumia account", template)
 
             data["message"] = "Account created successfully."
             data["user_details"] = AccountSerializer(user).data
@@ -192,8 +190,7 @@ class ResetLinkView(APIView):
                 return Response({"Error": "User does not exist"}, status=status.HTTP_400_BAD_REQUEST)
         
         user.otp = generate_otp()
-        link = "https://adfd-2c0f-f5c0-600-1b0-19d4-83d0-a763-e1cc.ngrok-free.app"
-        reset_link = f"{link}/reset-password/?&otp={user.otp}"
+        reset_link = f"{settings.BASE_URL}/reset-password/?&otp={user.otp}"
         
 
         context = {

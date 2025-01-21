@@ -19,7 +19,6 @@ class VendorCreateView(APIView):
 
     def post(self, request):
         serializer = VendorSerializer(data=request.data)
-        url = "https://adfd-2c0f-f5c0-600-1b0-19d4-83d0-a763-e1cc.ngrok-free.app"
         
         # Validate the serializer
         if serializer.is_valid():
@@ -29,7 +28,7 @@ class VendorCreateView(APIView):
             # Prepare email context
             context = {
                 "name": user.user.first_name,
-                "verify_link": f"{url}/verify-email/?otp={user.user.otp}",
+                "verify_link": f"{settings.BASE_URL}/verify-email/?otp={user.user.otp}",
                 "subject": "Verify your Jumia account"
             }
 

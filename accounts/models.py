@@ -109,6 +109,22 @@ class Account(AbstractUser):
         if self.date_of_birth:
             self.age = self.calculate_age()
         super().save(*args, **kwargs)
+
+    def clear_otp(self):
+        """
+        Clears the OTP (One-Time Password) and its creation timestamp if the email is verified.
+
+        This method sets the `otp` and `otp_created_at` attributes to None and saves the changes
+        to the database if the `is_email_verified` attribute is True.
+
+        Returns:
+            None
+        """
+        if self.is_email_verified:
+            self.otp = None
+            self.otp_created_at = None
+            self.save()
+        
     
     
     def __str__(self):
@@ -137,20 +153,3 @@ class Account(AbstractUser):
         return f"{self.first_name} {self.last_name} ({', '.join(role)})"
 
 
-
-
-
-# class Vendor(models.Model):
-#     user = models.OneToOneField(Account, on_delete=models.CASCADE, related_name="vendor")
-#     store_logo = models.ImageField(
-#         upload_to="store_logo/", default="store_logo/default-profile-image.png", blank=True, null=True)
-#     store_name = models.CharField(max_length=255, blank=True, null=True)
-#     store_description = models.TextField(blank=True, null=True)
-#     phone_number = models.CharField(max_length=15, blank=True, null=True)
-#     nationality = models.CharField(max_length=20, null=True, blank=True)
-#     state = models.CharField(max_length=20, null=True, blank=True)
-#     city = models.CharField(max_length=20, null=True, blank=True)
-#     address = models.CharField(max_length=100, null=True, blank=True)
-
-#     def __str__(self):
-#         return f"{self.user.email} | {self.store_name}"
