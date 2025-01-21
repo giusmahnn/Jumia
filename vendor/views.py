@@ -1,4 +1,5 @@
 from rest_framework.response import Response
+from django.conf import settings 
 from django.template.loader import render_to_string
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated

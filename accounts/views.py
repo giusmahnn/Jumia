@@ -1,4 +1,5 @@
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import redirect
+from django.conf import settings 
 import requests
 from rest_framework.views import APIView
 from rest_framework.response import Response
