@@ -19,7 +19,7 @@ from .permissions import *
 
 class GoogleAuthRedirect(APIView):
     def get(self, request):
-        redirect_url = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY}&response_type=code&scope=https://www.googleapis.com/auth/userinfo.profile%20https://www.googleapis.com/auth/userinfo.email&access_type=offline&redirect_uri=https://50a4-2c0f-f5c0-601-9952-d1d2-c60f-9c8f-b617.ngrok-free.app/google/callback"
+        redirect_url = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY}&response_type=code&scope=https://www.googleapis.com/auth/userinfo.profile%20https://www.googleapis.com/auth/userinfo.email&access_type=offline&redirect_uri={settings.BASE_URL}/google/callback"
         return redirect(redirect_url)
 
 
@@ -36,7 +36,7 @@ class GoogleRedirect(APIView):
             "code": code,
             "client_id": settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
             "client_secret": settings.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET,
-            "redirect_uri": "https://50a4-2c0f-f5c0-601-9952-d1d2-c60f-9c8f-b617.ngrok-free.app/google/callback",
+            "redirect_uri": settings.BASE_URL,
             "grant_type": "authorization_code",
         }
 
@@ -87,6 +87,7 @@ class GoogleRedirect(APIView):
                 user.profile_picture = profile_data["picture"]
                 updated = True
             if updated:
+                user.is_email_verified = True
                 user.save()
 
         # Prepare response
@@ -100,7 +101,7 @@ class GoogleRedirect(APIView):
         return Response(data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
 
 class VerifyEmail(APIView):
-    def get(self, request):
+    def get(self, request, otp):
         otp = request.GET.get("otp")
         if not otp:
             return Response({"message": "OTP is required"}, status=status.HTTP_400_BAD_REQUEST)
@@ -116,18 +117,23 @@ class VerifyEmail(APIView):
 
 class CreateAccount(APIView):
     permission_classes = [AllowAny]
+
     def post(self, request):
         serializers = AccountSerializer(data=request.data)
         data = {}
         if serializers.is_valid(raise_exception=False):
             user = serializers.save(is_buyer_user=True)
+            user.otp = generate_otp()
             user.save()
+
+            # Generate the verification link using request.build_absolute_uri()
+            verify_link = request.build_absolute_uri(user.get_absolute_url())
 
             context = {
                 "name": user.first_name,
-                "verify_link": f"{settings.BASE_URL}/verify-email/?otp={user.otp}/",
+                "verify_link": verify_link,
                 "subject": "Verify your Jumia account",
-                "body": f"Hello {user.first_name},\n\nTo verify your Jumia account, please click on the link below:\n{settings.BASE_URL}/verify-email/?otp={user.otp}\n\nThank you!"
+                "body": f"Hello {user.first_name},\n\nTo verify your Jumia account, please click on the link below:\n{verify_link}\n\nThank you!"
             }
             template = render_to_string("accounts/verify-email.html", context)
             send_email(user.email, "Verify your Jumia account", template)

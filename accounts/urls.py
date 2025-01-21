@@ -5,7 +5,7 @@ from .views import *
 urlpatterns = [
     path("google-signup/", GoogleAuthRedirect.as_view()),
     path("google/callback/", GoogleRedirect.as_view()),
-    path("verify-email/", VerifyEmail.as_view()),
+    path("verify-email/<str:otp>/", VerifyEmail.as_view(), name='verify-email'),
     path("signup/", CreateAccount.as_view()),
     path("login/", AccountLogin.as_view()),
     path("profile/", ProfileView.as_view()),
