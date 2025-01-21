@@ -125,18 +125,6 @@ class Account(AbstractUser):
             self.otp = None
             self.otp_created_at = None
             self.save()
-
-    def get_absolute_url(self):
-        """
-        Returns the absolute URL for verifying the email associated with this account.
-
-        This method constructs a URL for the 'verify-email' view, using the OTP (one-time password)
-        associated with this account instance.
-
-        Returns:
-            str: The URL to verify the email.
-        """
-        return reverse('verify-email', kwargs={'otp': self.otp})
         
     
     

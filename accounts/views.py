@@ -117,7 +117,6 @@ class VerifyEmail(APIView):
 
 class CreateAccount(APIView):
     permission_classes = [AllowAny]
-
     def post(self, request):
         serializers = AccountSerializer(data=request.data)
         data = {}
@@ -126,14 +125,11 @@ class CreateAccount(APIView):
             user.otp = generate_otp()
             user.save()
 
-            # Generate the verification link using request.build_absolute_uri()
-            verify_link = request.build_absolute_uri(user.get_absolute_url())
-
             context = {
                 "name": user.first_name,
-                "verify_link": verify_link,
+                "verify_link": f"{settings.BASE_URL}/verify-email/?otp={user.otp}/",
                 "subject": "Verify your Jumia account",
-                "body": f"Hello {user.first_name},\n\nTo verify your Jumia account, please click on the link below:\n{verify_link}\n\nThank you!"
+                "body": f"Hello {user.first_name},\n\nTo verify your Jumia account, please click on the link below:\n{settings.BASE_URL}/verify-email/?otp={user.otp}\n\nThank you!"
             }
             template = render_to_string("accounts/verify-email.html", context)
             send_email(user.email, "Verify your Jumia account", template)
