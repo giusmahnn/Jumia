@@ -24,13 +24,14 @@ class VendorCreateView(APIView):
         # Validate the serializer
         if serializer.is_valid():
             user = serializer.save()
-            user.user.otp = generate_otp()
+            user.otp = generate_otp()
+            user.otp_created()
             user.save()
 
             # Prepare email context
             context = {
                 "name": user.user.first_name,
-               "verify_link": request.build_absolute_uri(user.get_absolute_url()),
+                "verify_link": f"{settings.BASE_URL}/verify-email/{user.user.otp}/",
                 "subject": "Verify your Jumia account"
             }
 

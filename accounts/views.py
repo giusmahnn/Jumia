@@ -102,12 +102,12 @@ class GoogleRedirect(APIView):
 
 class VerifyEmail(APIView):
     def get(self, request, otp):
-        otp = request.GET.get("otp")
         if not otp:
             return Response({"message": "OTP is required"}, status=status.HTTP_400_BAD_REQUEST)
         try:
             user = Account.objects.get(otp=otp)
             user.is_email_verified = True
+            user.clear_otp()
             user.save()
             return Response({"Message": "Account Verified"}, status=status.HTTP_200_OK)
         except Account.DoesNotExist:
@@ -123,11 +123,13 @@ class CreateAccount(APIView):
         if serializers.is_valid(raise_exception=False):
             user = serializers.save(is_buyer_user=True)
             user.otp = generate_otp()
+            user.otp_created()
+            print("otp:", user.otp)
             user.save()
 
             context = {
                 "name": user.first_name,
-                "verify_link": f"{settings.BASE_URL}/verify-email/?otp={user.otp}/",
+                "verify_link": f"{settings.BASE_URL}/verify-email/{user.otp}/",
                 "subject": "Verify your Jumia account",
                 "body": f"Hello {user.first_name},\n\nTo verify your Jumia account, please click on the link below:\n{settings.BASE_URL}/verify-email/?otp={user.otp}\n\nThank you!"
             }

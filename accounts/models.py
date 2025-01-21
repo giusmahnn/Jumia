@@ -72,6 +72,11 @@ class Account(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 
+    def otp_created(self):
+        if self.otp:
+            self.otp_created_at = datetime.datetime.now(datetime.timezone.utc)
+            return True
+
 
     def calculate_age(self):
         """
@@ -125,6 +130,7 @@ class Account(AbstractUser):
             self.otp = None
             self.otp_created_at = None
             self.save()
+            return True
         
     
     
