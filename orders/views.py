@@ -122,3 +122,75 @@ class CheckoutView(APIView):
             return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
         else:
             return Response({"error": "Login required for checkout"}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+
+class OrderHistoryView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.is_authenticated:
+            orders = Order.objects.filter(customer=request.user)
+            serializer = OrderSerializer(orders, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({"error": "Login required to view order history"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+class OrderDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        if request.user.is_authenticated:
+            order = get_object_or_404(Order, pk=pk, customer=request.user)
+            serializer = OrderSerializer(order)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({"error": "Login required to view order details"}, status=status.HTTP_401_UNAUTHORIZED)
+    
+# class OrderCancelView(APIView):
+#     permission_classes = [IsAuthenticated]
+
+#     def post(self, request, pk):
+#         if request.user.is_authenticated:
+#             order = get_object_or_404(Order, pk=pk, customer=request.user)
+#             order.status = 'cancelled'
+#             order.save()
+#             return Response({"message": "Order cancelled successfully"}, status=status.HTTP_200_OK)
+#         return Response({"error": "Login required to cancel order"}, status=status.HTTP_401_UNAUTHORIZED)
+# class OrderReturnView(APIView):
+#     permission_classes = [IsAuthenticated]
+
+#     def post(self, request, pk):
+#         if request.user.is_authenticated:
+#             order = get_object_or_404(Order, pk=pk, customer=request.user)
+#             order.status = 'returned'
+#             order.save()
+#             return Response({"message": "Order returned successfully"}, status=status.HTTP_200_OK)
+#         return Response({"error": "Login required to return order"}, status=status.HTTP_401_UNAUTHORIZED)
+# class OrderTrackView(APIView):
+#     permission_classes = [IsAuthenticated]
+
+#     def get(self, request, pk):
+#         if request.user.is_authenticated:
+#             order = get_object_or_404(Order, pk=pk, customer=request.user)
+#             serializer = OrderSerializer(order)
+#             return Response(serializer.data, status=status.HTTP_200_OK)
+#         return Response({"error": "Login required to track order"}, status=status.HTTP_401_UNAUTHORIZED)
+# class OrderInvoiceView(APIView):
+#     permission_classes = [IsAuthenticated]
+
+#     def get(self, request, pk):
+#         if request.user.is_authenticated:
+#             order = get_object_or_404(Order, pk=pk, customer=request.user)
+#             serializer = OrderSerializer(order)
+#             return Response(serializer.data, status=status.HTTP_200_OK)
+#         return Response({"error": "Login required to view invoice"}, status=status.HTTP_401_UNAUTHORIZED)
+# class OrderInvoiceDownloadView(APIView):
+
+
+
+
+# TODO: 
+# - Check the cart session for anonymous users
+# - Check the reset password functionality
+# - Check the delete cart functionality
+# - test the order history endpoint

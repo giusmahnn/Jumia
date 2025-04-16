@@ -133,3 +133,4 @@ Jumia/__pycache__/admin.cpython-310.pyc
 *.seed
 *.pid.lock.*
 *.pid.lock
+.qodo
